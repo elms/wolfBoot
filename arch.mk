@@ -130,6 +130,23 @@ ifeq ($(ARCH),RISCV)
   ARCH_FLASH_OFFSET=0x20010000
 endif
 
+# powerpc
+ifeq ($(ARCH),PPC)
+  CROSS_COMPILE:=powerpc-linux-gnu-
+  CFLAGS+=-fno-builtin-printf -DUSE_M_TIME -g -nostartfiles
+  LDFLAGS+=-Wl,--build-id=none
+  #MATH_OBJS += ./lib/wolfssl/wolfcrypt/src/sp_c32.o
+
+  # Prune unused functions and data
+  CFLAGS +=-ffunction-sections -fdata-sections
+  LDFLAGS+=-Wl,--gc-sections
+
+  OBJS+=src/boot_ppc_start.o src/boot_ppc.o
+  # TODO: Set flash offset to platform
+  ARCH_FLASH_OFFSET=0x0
+endif
+
+
 ifeq ($(TARGET),kinetis)
   CFLAGS+= -I$(MCUXPRESSO_DRIVERS)/drivers -I$(MCUXPRESSO_DRIVERS) -DCPU_$(MCUXPRESSO_CPU) -I$(MCUXPRESSO_CMSIS)/Include -DDEBUG_CONSOLE_ASSERT_DISABLE=1
   OBJS+= $(MCUXPRESSO_DRIVERS)/drivers/fsl_clock.o $(MCUXPRESSO_DRIVERS)/drivers/fsl_ftfx_flash.o $(MCUXPRESSO_DRIVERS)/drivers/fsl_ftfx_cache.o $(MCUXPRESSO_DRIVERS)/drivers/fsl_ftfx_controller.o
