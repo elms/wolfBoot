@@ -14,7 +14,7 @@ else
 endif
 
 # Default flash offset
-ARCH_FLASH_OFFSET=0x0
+ARCH_FLASH_OFFSET?=0x0
 
 # Default SPI driver name
 SPI_TARGET=$(TARGET)
@@ -142,8 +142,6 @@ ifeq ($(ARCH),PPC)
   LDFLAGS+=-Wl,--gc-sections
 
   OBJS+=src/boot_ppc_start.o src/boot_ppc.o
-  # TODO: Set flash offset to platform
-  ARCH_FLASH_OFFSET=0x0
 endif
 
 
