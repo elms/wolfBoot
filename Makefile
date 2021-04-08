@@ -101,7 +101,7 @@ factory.bin: $(BOOT_IMG) wolfboot-align.bin $(PRIVATE_KEY) test-app/image_v1_sig
 		--change-section-vma .signed_image=0xEFA00000 \
 		--set-section-flags .signed_image=alloc,readonly \
 		wolfboot.elf factory.elf
-	$(Q)$(OBJCOPY) --gap-fill=255 -O binary factory.elf $@
+	$(Q)$(OBJCOPY) --remove-section=.data --gap-fill=255 -O binary factory.elf $@
 	#$(Q)cat wolfboot-align.bin test-app/image_v1_signed.bin > $@
 
 wolfboot.elf: include/target.h $(OBJS) $(LSCRIPT) FORCE
