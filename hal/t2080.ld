@@ -16,36 +16,21 @@ PHDRS
     bss  PT_LOAD;
 }
 
+MEMORY
+{
+    FLASH (rx) : ORIGIN = START, LENGTH = ##WOLFBOOT_PARTITION_BOOT_ADDRESS##
+    RAM (rwx) : ORIGIN = 0xfdd00000, LENGTH = 0x00002000
+}
+
 SECTIONS
 {
-    . = START;
     .text :
     {
         *(.text*)
         *(.rodata*)
-    } :text
+        *(.sdata*)
+    } > FLASH
 
-    .data :
-    {
-        _start_data = .;
-        KEEP(*(.data*))
-        . = ALIGN(4);
-        KEEP(*(.ramcode))
-        . = ALIGN(4);
-        _end_data = .;
-    }
-
-    .bss (NOLOAD) :
-    {
-        _start_bss = .;
-        __bss_start__ = .;
-        *(.bss*)
-        *(COMMON)
-        . = ALIGN(4);
-        _end_bss = .;
-        __bss_end__ = .;
-        _end = .;
-    }
     . = ALIGN(4);
 
     .boot HARD_RESET :
@@ -58,5 +43,27 @@ SECTIONS
         KEEP(*(.reset))
     } :text = 0xffff
     . = 0xeffffffc + 0x4;
+
+    .data :
+    {
+        _start_data = .;
+        KEEP(*(.data*))
+        . = ALIGN(4);
+        KEEP(*(.ramcode))
+        . = ALIGN(4);
+        _end_data = .;
+    } > RAM
+
+    .bss (NOLOAD) :
+    {
+        _start_bss = .;
+        __bss_start__ = .;
+        *(.bss*)
+        *(COMMON)
+        . = ALIGN(4);
+        _end_bss = .;
+        __bss_end__ = .;
+        _end = .;
+    } > RAM
 
 }
