@@ -156,13 +156,13 @@ check_config:
 	make -C tools/check_config
 
 
-%.o:%.c
+%.o:%.c .config
 	@echo "\t[CC-$(ARCH)] $@"
-	$(Q)$(CC) $(CFLAGS) -c -o $@ $^
+	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
 
-%.o:%.S
+%.o:%.S .config
 	@echo "\t[AS-$(ARCH)] $@"
-	$(Q)$(CC) $(CFLAGS) -c -o $@ $^
+	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
 
 FORCE:
 
