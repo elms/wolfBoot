@@ -24,8 +24,14 @@ void boot_entry_C(void)
 }
 
 #ifdef MMU
-void do_boot(const uint32_t *app_offset, const uint32_t* dts_offset) {}
+void do_boot(const uint32_t *app_offset, const uint32_t* dts_offset)
 #else
-void do_boot(const uint32_t *app_offset) { }
+void do_boot(const uint32_t *app_offset)
 #endif
+{
+
+  asm volatile("mtlr %0; blr":: "r"(app_offset));
+
+}
+
 void arch_reboot(void) {}

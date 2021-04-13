@@ -300,9 +300,10 @@ void RAMFUNCTION wolfBoot_start(void)
     } else if ((wolfBoot_get_partition_state(PART_UPDATE, &st) == 0) && (st == IMG_STATE_UPDATING)) {
         wolfBoot_update(0);
     }
-    if ((wolfBoot_open_image(&boot, PART_BOOT) < 0) ||
-            (wolfBoot_verify_integrity(&boot) < 0)  ||
-            (wolfBoot_verify_authenticity(&boot) < 0)) {
+    if ((wolfBoot_open_image(&boot, PART_BOOT) < 0)
+        || (wolfBoot_verify_integrity(&boot) < 0)
+        || (wolfBoot_verify_authenticity(&boot) < 0)
+        ) {
         if (wolfBoot_update(1) < 0) {
             /* panic: no boot option available. */
             while(1)

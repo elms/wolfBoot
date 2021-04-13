@@ -11,8 +11,10 @@ PHDRS
 SECTIONS
 {
     . = ##WOLFBOOT_TEST_APP_ADDRESS##;
+
     .text :
     {
+       *(.text.main)
         *(.text*)
         *(.rodata*)
     } :text
