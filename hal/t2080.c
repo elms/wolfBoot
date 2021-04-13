@@ -29,6 +29,42 @@ static inline void out_8(volatile unsigned char *addr, uint8_t val)
 			     : "r" (val));
 }
 
+static void uart_init(void) {
+    /* calc divisor */
+    //clock_div, baud, base_clk  163 115200 300000000
+    uint32_t div = 163; //(SYS_CLK / 2) / (16 * 115200);
+    register volatile uint8_t* uart = (uint8_t*)UART0_BASE;
+
+    while (!(in_8(uart + 5) & 0x40))
+       ;
+
+    /* set ier, fcr, mcr */
+    out_8(uart + 1, 0);
+    out_8(uart + 4, 3);
+    out_8(uart + 2, 7);
+
+    /* enable buad rate access (DLAB=1) - divisor latch access bit*/
+    out_8(uart + 3, 0x83);
+    /* set divisor */
+    out_8(uart + 0, div & 0xff);
+    out_8(uart + 1, (div>>8) & 0xff);
+    /* disable rate access (DLAB=0) */
+    out_8(uart + 3, 0x03);
+}
+
+static void uart_write(const char* buf, uint32_t sz)
+{
+    volatile uint8_t* uart = (uint8_t*)UART0_BASE;
+    uint32_t pos = 0;
+    while (sz-- > 0) {
+        while (!(in_8(uart + 5) & 0x20))
+		;
+        out_8(uart + 0, buf[pos++]);
+    }
+}
+#endif /* DEBUG_UART */
+
+
 /* T2080 RM 2.4 */
 #define CSSR 0xfe000000
 #define LAWBARHn(n) *((volatile uint32_t*)(CSSR + 0xC00 + n*0x10 + 0x0))
@@ -83,41 +119,6 @@ static void law_init(void) {
     LAWBARn (1) = (1<<31) | (id<<20) | LAW_SIZE_32MB;
 
 }
-
-static void uart_init(void) {
-    /* calc divisor */
-    //clock_div, baud, base_clk  163 115200 300000000
-    uint32_t div = 163; //(SYS_CLK / 2) / (16 * 115200);
-    register volatile uint8_t* uart = (uint8_t*)UART0_BASE;
-
-    while (!(in_8(uart + 5) & 0x40))
-       ;
-
-    /* set ier, fcr, mcr */
-    out_8(uart + 1, 0);
-    out_8(uart + 4, 3);
-    out_8(uart + 2, 7);
-        
-    /* enable buad rate access (DLAB=1) - divisor latch access bit*/
-    out_8(uart + 3, 0x83);
-    /* set divisor */
-    out_8(uart + 0, div & 0xff);
-    out_8(uart + 1, (div>>8) & 0xff);
-    /* disable rate access (DLAB=0) */
-    out_8(uart + 3, 0x03);
-}
-
-static void uart_write(const char* buf, uint32_t sz)
-{
-    volatile uint8_t* uart = (uint8_t*)UART0_BASE;
-    uint32_t pos = 0;
-    while (sz-- > 0) {
-        while (!(in_8(uart + 5) & 0x20))
-		;
-        out_8(uart + 0, buf[pos++]);
-    }
-}
-#endif /* DEBUG_UART */
 
 void hal_init(void) {
     law_init();
