@@ -69,6 +69,7 @@ void main(void) {
     int i = 0;
     int j = 0;
     int k = 0;
+    char o;
     uart_write("wolfBoot\n", 9);
 
     /* Wait for reboot */
@@ -79,7 +80,8 @@ void main(void) {
         uart_write("0x", 2);
         k = i;
         while (k>0) {
-            uart_write(k%10 + '0', 1);
+            o = k%10 + '0';
+            uart_write(&o, 1);
             k /= 10;
         }
     }
