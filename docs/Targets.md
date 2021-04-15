@@ -17,6 +17,7 @@ This README describes configuration of supported targets.
 * [STM32L5](#stm32l5)
 * [STM32L0](#stm32l0)
 * [STM32WB55](#stm32wb55)
+* [TI Hercules TMS570LC435](#ti-hercules-tms570lc435)
 * [Xilinx Zynq UltraScale](#xilinx-zynq-ultrascale)
 
 
@@ -862,3 +863,8 @@ WOLFBOOT_PARTITION_BOOT_ADDRESS?=0xA000
 WOLFBOOT_PARTITION_UPDATE_ADDRESS?=0x84000
 WOLFBOOT_PARTITION_SWAP_ADDRESS?=0xff000
 ```
+
+
+## TI Hercules TMS570LC435
+
+See [/config/examples/ti-tms570lc435.config](/config/examples/ti-tms570lc435.config) for example configuration.
