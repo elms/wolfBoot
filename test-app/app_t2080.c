@@ -64,25 +64,27 @@ static void uart_write(const char* buf, uint32_t sz)
 }
 #endif /* DEBUG_UART */
 
+static char* hex_lut = "0123456789abcdef";
 
 void main(void) {
     int i = 0;
     int j = 0;
     int k = 0;
-    char o;
+    char snum[8];
+    
     uart_write("wolfBoot\n", 9);
 
     /* Wait for reboot */
     while(1) {
-        for (j=0; j<100000; j++)
+        for (j=0; j<1000000; j++)
             ;
         i++;
-        uart_write("0x", 2);
-        k = i;
-        while (k>0) {
-            o = k%10 + '0';
-            uart_write(&o, 1);
-            k /= 10;
+        
+        uart_write("\r\n0x", 4);
+        for (k=0; k<8; k++) {
+            snum[7 - k] = hex_lut[(i >> 4*k) & 0xf];
         }
+        uart_write(snum, 8);
+
     }
 }
