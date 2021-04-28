@@ -121,6 +121,7 @@ test-self-update: wolfboot.bin test-app/image.bin FORCE
 	$(Q)mv $(PRIVATE_KEY) private_key.old
 	$(Q)$(MAKE) clean
 	$(Q)rm src/*_pub_key.c
+	$(Q)$(MAKE) wolfboot.bin
 	$(Q)$(MAKE) factory.bin RAM_CODE=1 WOLFBOOT_VERSION=$(WOLFBOOT_VERSION) SIGN=$(SIGN)
 	$(Q)$(SIGN_TOOL) $(SIGN_ARGS) test-app/image.bin $(PRIVATE_KEY) $(TEST_UPDATE_VERSION)
 	$(Q)$(STFLASH) --reset write test-app/image_v2_signed.bin 0x08020000 || \
