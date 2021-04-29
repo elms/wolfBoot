@@ -80,6 +80,9 @@ testbed-off: FORCE
 	$(Q)echo "1" >/sys/class/gpio/gpio4/value || true
 	$(Q)echo "Testbed off."
 
+check-version: $(EXPVER)
+	$(Q)echo "check"
+	$(Q)if (test `$(EXPVER)` -ne $(EXPECTED_VERSION)); then echo "`$(EXPVER)` not equal to expected $(EXPECTED_VERSION)"; false; fi
 
 test-reset: FORCE
 	$(Q)(sleep 1 && $(STFLASH) reset && sleep 1)&
@@ -171,7 +174,6 @@ test-resetold: FORCE
 
 
 
-
 ## Test cases:
 
 test-01-forward-update-no-downgrade: $(EXPVER) FORCE
@@ -179,17 +181,17 @@ test-01-forward-update-no-downgrade: $(EXPVER) FORCE
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory
 	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(MAKE) check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=4
 	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=4
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=1
 	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=4
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
@@ -198,17 +200,17 @@ test-02-forward-update-allow-downgrade: $(EXPVER) FORCE
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory ALLOW_DOWNGRADE=1
 	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=4
 	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=4
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=2
 	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 2)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=2
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
@@ -217,12 +219,12 @@ test-03-rollback: $(EXPVER) FORCE
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory
 	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=4
 	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=4
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=5
@@ -231,7 +233,7 @@ test-03-rollback: $(EXPVER) FORCE
 	$(Q)echo
 	$(Q)echo Resetting to trigger rollback...
 	$(Q)$(MAKE) test-reset
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=4
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
@@ -246,17 +248,17 @@ test-21-forward-update-no-downgrade-SPI: $(EXPVER) FORCE
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory $(SPI_OPTIONS)
 	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update-ext TEST_UPDATE_VERSION=4 $(SPI_OPTIONS)
 	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=4
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update-ext TEST_UPDATE_VERSION=1 $(SPI_OPTIONS)
 	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=4
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
@@ -265,12 +267,12 @@ test-23-rollback-SPI: $(EXPVER) FORCE
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory $(SPI_OPTIONS)
 	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update-ext TEST_UPDATE_VERSION=4 $(SPI_OPTIONS)
 	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=4
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update-ext TEST_UPDATE_VERSION=5 $(SPI_OPTIONS)
@@ -280,7 +282,7 @@ test-23-rollback-SPI: $(EXPVER) FORCE
 	$(Q)echo Resetting to trigger rollback...
 	$(Q)$(MAKE) test-reset
 	$(Q)sleep 2
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=4
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
@@ -290,12 +292,12 @@ test-34-forward-self-update: $(EXPVER) FORCE
 	$(Q)$(MAKE) distclean
 	$(Q)$(MAKE) test-factory RAM_CODE=1 SIGN=$(SIGN)
 	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Updating keys, firmware, bootloader
 	$(Q)$(MAKE) test-self-update WOLFBOOT_VERSION=4 RAM_CODE=1 SIGN=$(SIGN)
 	$(Q)sleep 2
-	$(Q)(test `$(EXPVER)` -eq 2)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=2
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 

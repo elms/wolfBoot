@@ -44,10 +44,13 @@
 #define MSGLEN      (4 + 4 + 8)
 
 #ifndef UART_DEV
-#define UART_DEV "/dev/ttyS0"
+#define UART_DEV "/dev/ttyACM1"
 #endif
 #ifndef B115200
 #define B115200 115200
+#endif
+#ifndef TIMEOUT
+#define TIMEOUT 30
 #endif
 
 void alarm_handler(int signo)
@@ -87,7 +90,7 @@ int main(int argc, char** argv)
     tty.c_cc[VTIME] = 5;
     tcsetattr(serialfd, TCSANOW, &tty);
 
-    alarm(60);
+    alarm(TIMEOUT);
 
     while (i >= 0) {
         char c;
