@@ -178,11 +178,10 @@ endif
 standalone:CFLAGS+=-DTEST_APP_STANDALONE
 standalone:LDFLAGS:=$(CFLAGS) -T standalone.ld -Wl,-gc-sections -Wl,-Map=image.map
 
-#OBJCOPY_FLAGS:=--gap-fill=255 --pad-to $$(( $(WOLFBOOT_PARTITION_BOOT_ADDRESS) + $(WOLFBOOT_PARTITION_SIZE) ))
 
 image.bin: image.elf
 	@echo "\t[BIN] $@"
-	$(Q)$(OBJCOPY) $(OBJCOPY_FLAGS) -O binary $^ $@
+	$(Q)$(OBJCOPY) --gap-fill=255 -O binary $^ $@
 
 image.elf: $(APP_OBJS) $(LSCRIPT)
 	@echo "\t[LD] $@"
