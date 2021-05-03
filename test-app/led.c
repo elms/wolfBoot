@@ -26,48 +26,79 @@
 #ifdef PLATFORM_stm32f4
 
 #define AHB1_CLOCK_ER (*(volatile uint32_t *)(0x40023830))
-#define GPIOD_AHB1_CLOCK_ER (1 << 3)
 
-#define GPIOD_BASE 0x40020c00
-#define GPIOD_MODE  (*(volatile uint32_t *)(GPIOD_BASE + 0x00))
-#define GPIOD_OTYPE (*(volatile uint32_t *)(GPIOD_BASE + 0x04))
-#define GPIOD_OSPD  (*(volatile uint32_t *)(GPIOD_BASE + 0x08))
-#define GPIOD_PUPD  (*(volatile uint32_t *)(GPIOD_BASE + 0x0c))
-#define GPIOD_ODR   (*(volatile uint32_t *)(GPIOD_BASE + 0x14))
-#define GPIOD_BSRR  (*(volatile uint32_t *)(GPIOD_BASE + 0x18))
-#define GPIOD_AFL   (*(volatile uint32_t *)(GPIOD_BASE + 0x20))
-#define GPIOD_AFH   (*(volatile uint32_t *)(GPIOD_BASE + 0x24))
+#define GPIO A
+#define LED_PIN 6
+#define LED_BOOT_PIN 5
+#if GPIO == A
+#define GPIO_AHB1_CLOCK_ER (1 << 0)
+#define GPIO_BASE 0x40020000
+#elif GPIO == B
+#define GPIO_AHB1_CLOCK_ER (1 << 1)
+#define GPIO_BASE 0x40020400
+#elif GPIO == C
+#define GPIO_AHB1_CLOCK_ER (1 << 2)
+#define GPIO_BASE 0x40020800
+#elif GPIO == D
+#define GPIO_AHB1_CLOCK_ER (1 << 3)
+#define GPIO_BASE 0x40020c00
+#else
+#warning "Assuming GPIOD"
+#define GPIO_AHB1_CLOCK_ER (1 << 3)
+#define GPIO_BASE 0x40020c00
+#endif
+
+#define GPIO_MODE  (*(volatile uint32_t *)(GPIO_BASE + 0x00))
+#define GPIO_OTYPE (*(volatile uint32_t *)(GPIO_BASE + 0x04))
+#define GPIO_OSPD  (*(volatile uint32_t *)(GPIO_BASE + 0x08))
+#define GPIO_PUPD  (*(volatile uint32_t *)(GPIO_BASE + 0x0c))
+#define GPIO_ODR   (*(volatile uint32_t *)(GPIO_BASE + 0x14))
+#define GPIO_BSRR  (*(volatile uint32_t *)(GPIO_BASE + 0x18))
+#define GPIO_AFL   (*(volatile uint32_t *)(GPIO_BASE + 0x20))
+#define GPIO_AFH   (*(volatile uint32_t *)(GPIO_BASE + 0x24))
+
+#ifndef LED_PIN
 #define LED_PIN (15)
+#endif
+
+#ifndef LED_BOOT_PIN
 #define LED_BOOT_PIN (14)
+#endif
+
 #define GPIO_OSPEED_100MHZ (0x03)
 void led_pwm_setup(void)
 {
     uint32_t reg;
-    AHB1_CLOCK_ER |= GPIOD_AHB1_CLOCK_ER;
-    reg = GPIOD_MODE & ~ (0x03 << (LED_PIN * 2));
-    GPIOD_MODE = reg | (2 << (LED_PIN * 2));
+    AHB1_CLOCK_ER |= GPIO_AHB1_CLOCK_ER;
+    reg = GPIO_MODE & ~ (0x03 << (LED_PIN * 2));
+    GPIO_MODE = reg | (2 << (LED_PIN * 2));
 
-    reg = GPIOD_OSPD & ~(0x03 << (LED_PIN * 2));
-    GPIOD_OSPD = reg | (0x03 << (LED_PIN * 2));
+    reg = GPIO_OSPD & ~(0x03 << (LED_PIN * 2));
+    GPIO_OSPD = reg | (0x03 << (LED_PIN * 2));
 
-    reg = GPIOD_PUPD & ~(0x03 <<  (LED_PIN * 2));
-    GPIOD_PUPD = reg | (0x02 << (LED_PIN * 2));
+    reg = GPIO_PUPD & ~(0x03 <<  (LED_PIN * 2));
+    GPIO_PUPD = reg | (0x02 << (LED_PIN * 2));
 
     /* Alternate function: use high pin */
-    reg = GPIOD_AFH & ~(0xf << ((LED_PIN - 8) * 4));
-    GPIOD_AFH = reg | (0x2 << ((LED_PIN - 8) * 4));
+#if (LED_PIN < 8)
+    reg = GPIO_AFL & ~(0xf << ((LED_PIN) * 4));
+    GPIO_AFL = reg | (0x2 << ((LED_PIN) * 4));
+#else
+    reg = GPIO_AFH & ~(0xf << ((LED_PIN - 8) * 4));
+    GPIO_AFH = reg | (0x2 << ((LED_PIN - 8) * 4));
+#endif
 }
 
 void boot_led_on(void)
 {
     uint32_t reg;
     uint32_t pin = LED_BOOT_PIN;// - 2 * (wolfBoot_current_firmware_version() & 0x01);
-    AHB1_CLOCK_ER |= GPIOD_AHB1_CLOCK_ER;
-    reg = GPIOD_MODE & ~(0x03 << (pin * 2));
-    GPIOD_MODE = reg | (1 << (pin * 2));
-    reg = GPIOD_PUPD & ~(0x03 << (pin * 2));
-    GPIOD_PUPD = reg | (1 << (pin * 2));
-    GPIOD_BSRR |= (1 << pin);
+    AHB1_CLOCK_ER |= GPIO_AHB1_CLOCK_ER;
+    reg = GPIO_MODE & ~(0x03 << (pin * 2));
+    GPIO_MODE = reg | (1 << (pin * 2));
+    reg = GPIO_PUPD & ~(0x03 << (pin * 2));
+    GPIO_PUPD = reg | (1 << (pin * 2));
+    GPIO_BSRR |= (1 << pin);
 }
 
 #endif /* PLATFORM_stm32f4 */

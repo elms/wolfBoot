@@ -52,21 +52,21 @@
 #define UART_SR_RX_NOTEMPTY     (1 << 5)
 
 
-#define CLOCK_SPEED (168000000)
+#define CLOCK_SPEED (16000000)
 
 #define APB2_CLOCK_ER           (*(volatile uint32_t *)(0x40023844))
 #define UART1_APB2_CLOCK_ER (1 << 4)
 
 #define AHB1_CLOCK_ER (*(volatile uint32_t *)(0x40023830))
 #define GPIOB_AHB1_CLOCK_ER (1 << 1)
-#define GPIOB_BASE 0x40020400
+#define GPIOB_BASE 0x40020000
 
 #define GPIOB_MODE  (*(volatile uint32_t *)(GPIOB_BASE + 0x00))
 #define GPIOB_AFL   (*(volatile uint32_t *)(GPIOB_BASE + 0x20))
 #define GPIOB_AFH   (*(volatile uint32_t *)(GPIOB_BASE + 0x24))
 #define UART1_PIN_AF 7
-#define UART1_RX_PIN 7
-#define UART1_TX_PIN 6
+#define UART1_RX_PIN 6
+#define UART1_TX_PIN 7
 
 #define MSGSIZE 16
 #define PAGESIZE (256)
@@ -195,8 +195,8 @@ void main(void) {
     int i;
     memset(page, 0xFF, PAGESIZE);
     boot_led_on();
-    flash_set_waitstates();
-    clock_config();
+    //flash_set_waitstates();
+    //clock_config();
     led_pwm_setup();
     pwm_init(CPU_FREQ, 0);
 
@@ -223,7 +223,9 @@ void main(void) {
 #ifdef EXT_ENCRYPTED
     wolfBoot_set_encrypt_key("0123456789abcdef0123456789abcdef", 32);
 #endif
-    uart_write(START);
+    for (i = 100; i >= 0; i--)
+      uart_write(START);
+    
     for (i = 3; i >= 0; i--) {
         uart_write(v_array[i]);
     }
