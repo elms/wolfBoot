@@ -7,6 +7,10 @@ SPI_CHIP=SST25VF080B
 SPI_OPTIONS=SPI_FLASH=1 WOLFBOOT_PARTITION_SIZE=0x80000 WOLFBOOT_PARTITION_UPDATE_ADDRESS=0x00000 WOLFBOOT_PARTITION_SWAP_ADDRESS=0x80000
 SIGN_ARGS=
 
+FOOT_ADDRESS=131067
+EXT_SIZE=$$((1024*1024))
+EXTFOOT_ADDRESS=524283
+
 ifneq ("$(wildcard $(WOLFBOOT_ROOT)/tools/keytools/keygen)","")
 	KEYGEN_TOOL=$(WOLFBOOT_ROOT)/tools/keytools/keygen
 else
@@ -111,10 +115,8 @@ test-spi-off: FORCE
 	$(Q)$(MAKE) testbed-on
 
 test-update: test-app/image.bin FORCE
-	$(Q)dd if=/dev/zero bs=131067 count=1 2>/dev/null | tr "\000" "\377" > test-update.bin
 	$(Q)$(SIGN_TOOL) $(SIGN_ARGS) test-app/image.bin $(PRIVATE_KEY) $(TEST_UPDATE_VERSION)
-	$(Q)dd if=test-app/image_v$(TEST_UPDATE_VERSION)_signed.bin of=test-update.bin bs=1 conv=notrunc
-	$(Q)printf "pBOOT" >> test-update.bin
+	$(Q)printf "pBOOT" | $(BINASSEMBLE) test-update.bin 0 test-app/image_v$(TEST_UPDATE_VERSION)_signed.bin $(FOOT_ADDRESS) /dev/stdin
 	$(Q)$(MAKE) test-reset
 	$(Q)sleep 2
 	$(Q)$(STFLASH) --reset write test-update.bin 0x08040000 || \
@@ -128,21 +130,21 @@ test-self-update: FORCE
 	$(Q)$(STFLASH) --reset write test-app/image_v2_signed.bin 0x08020000 || \
 		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write test-app/image_v2_signed.bin 0x08020000) || \
 		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write test-app/image_v2_signed.bin 0x08020000)
-	$(Q)dd if=/dev/zero bs=131067 count=1 2>/dev/null | tr "\000" "\377" > test-self-update.bin
 	$(Q)$(SIGN_TOOL) $(SIGN_ARGS) --wolfboot-update wolfboot.bin private_key.old $(WOLFBOOT_VERSION)
-	$(Q)dd if=wolfboot_v$(WOLFBOOT_VERSION)_signed.bin of=test-self-update.bin bs=1 conv=notrunc
-	$(Q)printf "pBOOT" >> test-self-update.bin
+	$(Q)printf "pBOOT" | $(BINASSEMBLE) test-self-update.bin 0 wolfboot_v$(WOLFBOOT_VERSION)_signed.bin $(FOOT_ADDRESS) /dev/stdin
+
 	$(Q)$(STFLASH) --reset write test-self-update.bin 0x08040000 || \
 		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write test-self-update.bin 0x08040000) || \
 		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write test-self-update.bin 0x08040000)
 
 test-update-ext: test-app/image.bin FORCE
 	$(Q)$(SIGN_TOOL) $(SIGN_ARGS) test-app/image.bin $(PRIVATE_KEY) $(TEST_UPDATE_VERSION)
-	$(Q)(dd if=/dev/zero bs=1M count=1 | tr '\000' '\377' > test-update.rom)
-	$(Q)dd if=test-app/image_v$(TEST_UPDATE_VERSION)_signed.bin of=test-update.rom bs=1 count=524283 conv=notrunc
-	$(Q)printf "pBOOT" | dd of=test-update.rom obs=1 seek=524283 count=5 conv=notrunc
+	$(Q)printf "pBOOT" | $(BINASSEMBLE) test-update.rom \
+		0 test-app/image_v$(TEST_UPDATE_VERSION)_signed.bin \
+		$(EXTFOOT_ADDRESS) /dev/stdin \
+		$(EXT_SIZE) /dev/null
 	$(Q)$(MAKE) test-spi-on || true
-	flashrom -c $(SPI_CHIP) -p linux_spi:dev=/dev/spidev0.0 -w test-update.rom
+	$(Q)flashrom -c $(SPI_CHIP) -p linux_spi:dev=/dev/spidev0.0 -w test-update.rom
 	$(Q)$(MAKE) test-spi-off
 	$(Q)$(MAKE) test-reset
 	$(Q)sleep 2
