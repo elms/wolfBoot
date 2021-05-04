@@ -44,13 +44,13 @@
 #define MSGLEN      (4 + 4 + 8)
 
 #ifndef UART_DEV
-#define UART_DEV "/dev/ttyACM1"
+#define UART_DEV "/dev/ttyS0"
 #endif
 #ifndef B115200
 #define B115200 115200
 #endif
 #ifndef TIMEOUT
-#define TIMEOUT 30
+#define TIMEOUT 60
 #endif
 
 void alarm_handler(int signo)
@@ -70,8 +70,8 @@ int main(int argc, char** argv)
     sigset(SIGALRM, alarm_handler);
 
 
-    if (argc != 1) {
-        printf("Usage: %s\n", argv[0]);
+    if (argc > 2) {
+        printf("Usage: %s [trigger command]\n", argv[0]);
         exit(1);
     }
 
@@ -92,6 +92,11 @@ int main(int argc, char** argv)
 
     alarm(TIMEOUT);
 
+    if (argc > 1) {
+        fprintf(stderr, "Executinging \"%s\"\n", argv[1]);
+        system(argv[1]);
+    }
+    
     while (i >= 0) {
         char c;
         res = read(serialfd, &c, 1);

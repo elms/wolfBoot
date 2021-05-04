@@ -126,7 +126,7 @@ int main(int argc, const char* argv[]) {
         size_t endaddr = entries[i-1].address + entries[i-1].nbytes;
         if (endaddr > entries[i].address) {
             fprintf(stderr,
-              "overlap with %s(end address 0x%lx) and %s (start address 0x%lx \n",
+              "overlap with %s(end address 0x%zx) and %s (start address 0x%zx \n",
                     entries[i-1].fname, endaddr,
                     entries[i].fname, entries[i].address);
             err = 1;
@@ -160,7 +160,7 @@ int main(int argc, const char* argv[]) {
             nw = fwrite(&fill, 1, 1, fo);
             if (nw != 1) {
                 fprintf(stderr,
-                  "Failed to write fill bytes at 0x%lx\n",
+                  "Failed to write fill bytes at 0x%zu\n",
                         cur_add);
                 return EXIT_FAILURE;
             }
@@ -174,7 +174,7 @@ int main(int argc, const char* argv[]) {
             cur_add += nw;
             if (nr != nw) {
                 fprintf(stderr,
-                  "Failed to wrote %ld bytes of the %ld bytes read from %s\n",
+                  "Failed to wrote %zu bytes of the %zu bytes read from %s\n",
                         nw, nr, entries[i].fname);
                 return EXIT_FAILURE;
             }

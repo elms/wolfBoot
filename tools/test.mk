@@ -3,6 +3,9 @@ WOLFBOOT_VERSION?=0
 EXPVER=tools/test-expect-version/test-expect-version
 BINASSEMBLE=tools/bin-assemble/bin-assemble
 
+FOOT_ADDRESS=131067
+EXT_FOOT_ADDRESS=524283
+
 SPI_CHIP=SST25VF080B
 SPI_OPTIONS=SPI_FLASH=1 WOLFBOOT_PARTITION_SIZE=0x80000 WOLFBOOT_PARTITION_UPDATE_ADDRESS=0x00000 WOLFBOOT_PARTITION_SWAP_ADDRESS=0x80000
 SIGN_ARGS=
@@ -87,10 +90,18 @@ testbed-off: FORCE
 
 check-version: $(EXPVER)
 	$(Q)echo "check"
-	$(Q)if (test `$(EXPVER)` -ne $(EXPECTED_VERSION)); then echo "`$(EXPVER)` not equal to expected $(EXPECTED_VERSION)"; false; fi
+	$(Q)if (test `$(EXPVER) "$(STFLASH) reset >&2"` -ne $(EXPECTED_VERSION)); then \
+		echo "`$(EXPVER)` not equal to expected $(EXPECTED_VERSION)"; \
+		false; \
+	fi
 
 test-reset: FORCE
-	$(Q)(sleep 1 && $(STFLASH) reset && sleep 1)&
+	$(Q)for i in `seq 10`; do \
+		echo reset try $$i;\
+		$(STFLASH) reset;\
+		test $$? != 0 || break; \
+		sleep 1; \
+	done
 
 test-spi-on: FORCE
 	$(Q)$(MAKE) testbed-off
@@ -114,40 +125,31 @@ test-spi-off: FORCE
 	$(Q)echo "in" >/sys/class/gpio/gpio11/direction
 	$(Q)$(MAKE) testbed-on
 
-test-update: test-app/image.bin FORCE
-	$(Q)dd if=/dev/zero bs=131067 count=1 2>/dev/null | tr "\000" "\377" > test-update.bin
+test-update: test-app/image.bin $(BINASSEMBLE) FORCE
 	$(Q)$(SIGN_TOOL) $(SIGN_ARGS) test-app/image.bin $(PRIVATE_KEY) $(TEST_UPDATE_VERSION)
-	$(Q)dd if=test-app/image_v$(TEST_UPDATE_VERSION)_signed.bin of=test-update.bin bs=1 conv=notrunc
-	$(Q)printf "pBOOT" | dd of=test-update.bin bs=1 seek=131067
+	$(Q)$(BINASSEMBLE) test-update.bin 0 test-app/image_v$(TEST_UPDATE_VERSION)_signed.bin $(FOOT_ADDRESS) <(echo "pBOOT")
 	$(Q)$(MAKE) test-reset
 	$(Q)sleep 2
-	$(Q)$(STFLASH) --reset write test-update.bin 0x08040000 || \
-		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write test-update.bin 0x08040000) || \
-		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write test-update.bin 0x08040000)
+	$(Q)$(MAKE) test-reset
+	$(Q)$(STFLASH) --reset write test-update.bin 0x08040000)
 
-test-self-update: wolfboot.bin test-app/image.bin FORCE
+test-self-update: wolfboot.bin test-app/image.bin $(BINASSEMBLE) FORCE
 	$(Q)mv $(PRIVATE_KEY) private_key.old
 	$(Q)$(MAKE) clean
 	$(Q)rm src/*_pub_key.c
 	$(Q)$(MAKE) wolfboot.bin
 	$(Q)$(MAKE) factory.bin RAM_CODE=1 WOLFBOOT_VERSION=$(WOLFBOOT_VERSION) SIGN=$(SIGN)
 	$(Q)$(SIGN_TOOL) $(SIGN_ARGS) test-app/image.bin $(PRIVATE_KEY) $(TEST_UPDATE_VERSION)
-	$(Q)$(STFLASH) --reset write test-app/image_v2_signed.bin 0x08020000 || \
-		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write test-app/image_v2_signed.bin 0x08020000) || \
-		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write test-app/image_v2_signed.bin 0x08020000)
-	$(Q)dd if=/dev/zero bs=131067 count=1 2>/dev/null | tr "\000" "\377" > test-self-update.bin
+	$(Q)$(MAKE) test-reset
+	$(Q)$(STFLASH) --reset write test-app/image_v2_signed.bin 0x08020000
 	$(Q)$(SIGN_TOOL) $(SIGN_ARGS) --wolfboot-update wolfboot.bin private_key.old $(WOLFBOOT_VERSION)
-	$(Q)dd if=wolfboot_v$(WOLFBOOT_VERSION)_signed.bin of=test-self-update.bin bs=1 conv=notrunc
-	$(Q)printf "pBOOT" | dd of=test-update.bin bs=1 seek=131067
-	$(Q)$(STFLASH) --reset write test-self-update.bin 0x08040000 || \
-		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write test-self-update.bin 0x08040000) || \
-		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write test-self-update.bin 0x08040000)
+	$(Q)$(BINASSEMBLE) test-self-update.bin 0 test-app/image_v$(TEST_UPDATE_VERSION)_signed.bin $(FOOT_ADDRESS) <(echo "pBOOT")
+	$(Q)$(MAKE) test-reset
+	$(Q)$(STFLASH) --reset write test-self-update.bin 0x08040000
 
-test-update-ext: test-app/image.bin FORCE
+test-update-ext: test-app/image.bin $(BINASSEMBLE) FORCE
 	$(Q)$(SIGN_TOOL) $(SIGN_ARGS) test-app/image.bin $(PRIVATE_KEY) $(TEST_UPDATE_VERSION)
-	$(Q)(dd if=/dev/zero bs=1M count=1 | tr '\000' '\377' > test-update.rom)
-	$(Q)dd if=test-app/image_v$(TEST_UPDATE_VERSION)_signed.bin of=test-update.rom bs=1 count=524283 conv=notrunc
-	$(Q)printf "pBOOT" | dd of=test-update.rom obs=1 seek=524283 count=5 conv=notrunc
+	$(Q)$(BINASSEMBLE) test-self-update.bin 0 test-app/image_v$(TEST_UPDATE_VERSION)_signed.bin $(EXT_FOOT_ADDRESS) <(echo "pBOOT")
 	$(Q)$(MAKE) test-spi-on || true
 	flashrom -c $(SPI_CHIP) -p linux_spi:dev=/dev/spidev0.0 -w test-update.rom
 	$(Q)$(MAKE) test-spi-off
@@ -170,12 +172,11 @@ test-erase-ext: FORCE
 test-factory: factory.bin
 	$(Q)$(MAKE) test-reset
 	$(Q)sleep 2
-	$(Q)$(STFLASH) --reset write factory.bin 0x08000000 || \
-		(($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write factory.bin 0x08000000) || \
-		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write factory.bin 0x08000000))&
+	$(Q)$(MAKE) test-reset
+	$(Q)$(STFLASH) --reset write factory.bin 0x08000000
 
 test-resetold: FORCE
-	$(Q)(sleep 1 && st-info --reset) &
+	$(Q)(sleep 1 && st-info --reset)
 
 
 
@@ -214,7 +215,7 @@ test-02-forward-update-allow-downgrade: $(EXPVER) FORCE
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=2
-	$(Q)echo Expecting version '4'
+	$(Q)echo Expecting version '2'
 	$(Q)$(MAKE) check-version EXPECTED_VERSION=2
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
@@ -234,7 +235,7 @@ test-03-rollback: $(EXPVER) FORCE
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=5
 	$(Q)echo Expecting version '5'
-	$(Q)(test `$(EXPVER)` -eq 5)
+	$(Q)$(MAKE) check-version EXPECTED_VERSION=5
 	$(Q)echo
 	$(Q)echo Resetting to trigger rollback...
 	$(Q)$(MAKE) test-reset
@@ -357,8 +358,14 @@ test-163-rollback-TPM-RSA: $(EXPVER) FORCE
 	$(Q)$(MAKE) test-03-rollback SIGN=RSA2048 WOLFTPM=1
 	$(Q)$(MAKE) tpm-mute
 
-test-all: clean test-01-forward-update-no-downgrade test-02-forward-update-allow-downgrade test-03-rollback \
-	test-11-forward-update-no-downgrade-ECC test-13-rollback-ECC test-21-forward-update-no-downgrade-SPI test-23-rollback-SPI \
+test-all: clean \
+	test-01-forward-update-no-downgrade \
+	test-02-forward-update-allow-downgrade \
+	test-03-rollback \
+	test-11-forward-update-no-downgrade-ECC \
+	test-13-rollback-ECC \
+	test-21-forward-update-no-downgrade-SPI \
+	test-23-rollback-SPI \
 	test-34-forward-self-update \
 	test-44-forward-self-update-ECC \
 	test-51-forward-update-no-downgrade-RSA \

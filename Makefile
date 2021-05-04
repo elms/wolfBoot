@@ -47,7 +47,7 @@ all: $(MAIN_TARGET)
 
 wolfboot.bin: wolfboot.elf
 	@echo "\t[BIN] $@"
-	$(Q)$(OBJCOPY) -O binary --gap-fill=255 $^ $@
+	$(Q)$(OBJCOPY) -O binary $^ $@
 
 align: wolfboot-align.bin
 
@@ -55,7 +55,7 @@ BOOTLOADER_PARTITION_SIZE=$$(( $(WOLFBOOT_PARTITION_BOOT_ADDRESS) - $(ARCH_FLASH
 BOOT_PAD_TO_ADDR=$$(($(WOLFBOOT_START) + $(BOOTLOADER_PARTITION_SIZE)))
 
 wolfboot-align.bin: wolfboot.elf
-	$(Q)$(OBJCOPY) -O binary --gap-fill=255 wolfboot.elf $@
+	$(Q)$(OBJCOPY) -O binary wolfboot.elf $@
 	@echo
 	@echo "\t[SIZE]"
 	$(Q)$(SIZE) wolfboot.elf
