@@ -162,9 +162,10 @@ test-erase-ext: FORCE
 	flashrom -c $(SPI_CHIP) -p linux_spi:dev=/dev/spidev0.0 -E
 	$(Q)$(MAKE) test-spi-off || true
 
-test-factory: factory.bin
+test-factory: FORCE
 	$(Q)$(MAKE) test-reset
 	$(Q)sleep 2
+	$(Q)$(MAKE) factory.bin RAM_CODE=1 WOLFBOOT_VERSION=$(WOLFBOOT_VERSION) SIGN=$(SIGN)
 	$(Q)$(STFLASH) --reset write factory.bin 0x08000000 || \
 		(($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write factory.bin 0x08000000) || \
 		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write factory.bin 0x08000000))&
