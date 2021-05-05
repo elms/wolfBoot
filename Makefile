@@ -73,13 +73,16 @@ standalone:
 include tools/test.mk
 include tools/test-enc.mk
 
-ed25519.der:
+src/ed25519_pub_key.c ed25519.der:
 	$(Q)$(KEYGEN_TOOL) $(KEYGEN_OPTIONS) src/ed25519_pub_key.c
-ecc256.der:
+
+src/ecc256_pub_key.c ecc256.der:
 	$(Q)$(KEYGEN_TOOL) $(KEYGEN_OPTIONS) src/ecc256_pub_key.c
-rsa2048.der:
+
+src/rsa2048_pub_key.c rsa2048.der:
 	$(Q)$(KEYGEN_TOOL) $(KEYGEN_OPTIONS) src/rsa2048_pub_key.c
-rsa4096.der:
+
+src/rsa4096_pub_key.c rsa4096.der:
 	$(Q)$(KEYGEN_TOOL) $(KEYGEN_OPTIONS) src/rsa4096_pub_key.c
 
 keytools:
@@ -109,14 +112,6 @@ hex: wolfboot.hex
 %.hex:%.elf
 	@echo "\t[ELF2HEX] $@"
 	@$(OBJCOPY) -O ihex $^ $@
-
-src/ed25519_pub_key.c: ed25519.der
-
-src/ecc256_pub_key.c: ecc256.der
-
-src/rsa2048_pub_key.c: rsa2048.der
-
-src/rsa4096_pub_key.c: rsa4096.der
 
 keys: $(PRIVATE_KEY)
 

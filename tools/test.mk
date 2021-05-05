@@ -210,7 +210,7 @@ test-02-forward-update-allow-downgrade: $(EXPVER) FORCE
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=2
-	$(Q)echo Expecting version '4'
+	$(Q)echo Expecting version '2'
 	$(Q)(test `$(EXPVER)` -eq 2)
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
