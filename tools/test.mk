@@ -165,7 +165,7 @@ test-erase-ext: FORCE
 test-factory: FORCE
 	$(Q)$(MAKE) test-reset
 	$(Q)sleep 2
-	$(Q)$(MAKE) factory.bin RAM_CODE=1 WOLFBOOT_VERSION=$(WOLFBOOT_VERSION) SIGN=$(SIGN)
+	$(Q)$(MAKE) clean factory.bin RAM_CODE=1 WOLFBOOT_VERSION=$(WOLFBOOT_VERSION) SIGN=$(SIGN)
 	$(Q)$(STFLASH) --reset write factory.bin 0x08000000 || \
 		(($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write factory.bin 0x08000000) || \
 		($(MAKE) test-reset && sleep 1 && $(STFLASH) --reset write factory.bin 0x08000000))&
