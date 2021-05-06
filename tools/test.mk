@@ -174,187 +174,180 @@ test-resetold: FORCE
 	$(Q)(sleep 1 && st-info --reset) &
 
 
+test-check-version: $(EXPVER) FORCE
+	$(Q)echo Expecting version '$(EXPECTED_VERSION)'
+	$(Q)(test `$(EXPVER) "$(STFLASH) reset >&2"` -eq $(EXPECTED_VERSION))
+
 
 
 ## Test cases:
 
-test-01-forward-update-no-downgrade: $(EXPVER) FORCE
+test-01-forward-update-no-downgrade: FORCE
 	$(Q)$(MAKE) test-erase
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory
-	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=4
-	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=4
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=1
-	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=4
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
-test-02-forward-update-allow-downgrade: $(EXPVER) FORCE
+test-02-forward-update-allow-downgrade: FORCE
 	$(Q)$(MAKE) test-erase
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory ALLOW_DOWNGRADE=1
-	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=4
-	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=4
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=2
-	$(Q)echo Expecting version '2'
-	$(Q)(test `$(EXPVER)` -eq 2)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=2
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
-test-03-rollback: $(EXPVER) FORCE
+test-03-rollback: FORCE
 	$(Q)$(MAKE) test-erase
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory
-	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=4
-	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=4
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update TEST_UPDATE_VERSION=5
-	$(Q)echo Expecting version '5'
-	$(Q)(test `$(EXPVER)` -eq 5)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=5
 	$(Q)echo
 	$(Q)echo Resetting to trigger rollback...
 	$(Q)$(MAKE) test-reset
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=4
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
-test-11-forward-update-no-downgrade-ECC: $(EXPVER) FORCE
+test-11-forward-update-no-downgrade-ECC: FORCE
 	$(Q)$(MAKE) test-01-forward-update-no-downgrade SIGN=ECC256
 
-test-13-rollback-ECC: $(EXPVER) FORCE
+test-13-rollback-ECC: FORCE
 	$(Q)$(MAKE) test-03-rollback SIGN=ECC256
 
-test-21-forward-update-no-downgrade-SPI: $(EXPVER) FORCE
+test-21-forward-update-no-downgrade-SPI: FORCE
 	$(Q)$(MAKE) test-erase-ext
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory $(SPI_OPTIONS)
-	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update-ext TEST_UPDATE_VERSION=4 $(SPI_OPTIONS)
-	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=4
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update-ext TEST_UPDATE_VERSION=1 $(SPI_OPTIONS)
-	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=4
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
-test-23-rollback-SPI: $(EXPVER) FORCE
+test-23-rollback-SPI: FORCE
 	$(Q)$(MAKE) test-erase-ext
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory $(SPI_OPTIONS)
-	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update-ext TEST_UPDATE_VERSION=4 $(SPI_OPTIONS)
-	$(Q)echo Expecting version '4'
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=4
 	$(Q)echo
 	$(Q)echo Creating and uploading update image...
 	$(Q)$(MAKE) test-update-ext TEST_UPDATE_VERSION=5 $(SPI_OPTIONS)
-	$(Q)echo Expecting version '5'
-	$(Q)(test `$(EXPVER)` -eq 5)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=5
 	$(Q)echo
 	$(Q)echo Resetting to trigger rollback...
 	$(Q)$(MAKE) test-reset
 	$(Q)sleep 2
-	$(Q)(test `$(EXPVER)` -eq 4)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=4
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
-test-34-forward-self-update: $(EXPVER) FORCE
+test-34-forward-self-update: FORCE
 	$(Q)echo Creating and uploading factory image...
 	$(Q)$(MAKE) test-factory RAM_CODE=1 SIGN=$(SIGN)
-	$(Q)echo Expecting version '1'
-	$(Q)(test `$(EXPVER)` -eq 1)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=1
 	$(Q)echo
 	$(Q)echo Updating keys, firmware, bootloader
 	$(Q)$(MAKE) test-self-update WOLFBOOT_VERSION=4 RAM_CODE=1 SIGN=$(SIGN)
 	$(Q)sleep 2
-	$(Q)echo Expecting version '2'
-	$(Q)(test `$(EXPVER)` -eq 2)
+	$(Q)$(MAKE) test-check-version EXPECTED_VERSION=2
 	$(Q)$(MAKE) clean
 	$(Q)echo TEST PASSED
 
-test-44-forward-self-update-ECC: $(EXPVER) FORCE
+test-44-forward-self-update-ECC: FORCE
 	$(Q)$(MAKE) test-34-forward-self-update SIGN=ECC256
 
-test-51-forward-update-no-downgrade-RSA: $(EXPVER) FORCE
+test-51-forward-update-no-downgrade-RSA: FORCE
 	$(Q)$(MAKE) test-01-forward-update-no-downgrade SIGN=RSA2048
 
-test-53-rollback-RSA: $(EXPVER) FORCE
+test-53-rollback-RSA: FORCE
 	$(Q)$(MAKE) test-03-rollback SIGN=RSA2048
 
-test-61-forward-update-no-downgrade-TPM: $(EXPVER) FORCE
+test-61-forward-update-no-downgrade-TPM: FORCE
 	$(Q)$(MAKE) test-spi-off || true
 	$(Q)$(MAKE) tpm-unmute
 	$(Q)$(MAKE) test-01-forward-update-no-downgrade SIGN=ECC256 WOLFTPM=1 TPM2=1
 	$(Q)$(MAKE) tpm-mute
 
-test-63-rollback-TPM: $(EXPVER) FORCE
+test-63-rollback-TPM: FORCE
 	$(Q)$(MAKE) test-spi-off || true
 	$(Q)$(MAKE) tpm-unmute
 	$(Q)$(MAKE) test-03-rollback SIGN=ECC256 WOLFTPM=1
 	$(Q)$(MAKE) tpm-mute
 
-test-71-forward-update-no-downgrade-RSA-4096: $(EXPVER) FORCE
+test-71-forward-update-no-downgrade-RSA-4096: FORCE
 	$(Q)$(MAKE) test-01-forward-update-no-downgrade SIGN=RSA4096
 
-test-73-rollback-RSA-4096: $(EXPVER) FORCE
+test-73-rollback-RSA-4096: FORCE
 	$(Q)$(MAKE) test-03-rollback SIGN=RSA4096
 
-test-81-forward-update-no-downgrade-ED25519-SHA3: $(EXPVER) FORCE
+test-81-forward-update-no-downgrade-ED25519-SHA3: FORCE
 	$(Q)$(MAKE) test-01-forward-update-no-downgrade SIGN=ED25519 HASH=SHA3
 
-test-91-forward-update-no-downgrade-ECC256-SHA3: $(EXPVER) FORCE
+test-91-forward-update-no-downgrade-ECC256-SHA3: FORCE
 	$(Q)$(MAKE) test-01-forward-update-no-downgrade SIGN=ECC256 HASH=SHA3
 
-test-101-forward-update-no-downgrade-RSA2048-SHA3: $(EXPVER) FORCE
+test-101-forward-update-no-downgrade-RSA2048-SHA3: FORCE
 	$(Q)$(MAKE) test-01-forward-update-no-downgrade SIGN=RSA2048 HASH=SHA3
 
-test-111-forward-update-no-downgrade-RSA4096-SHA3: $(EXPVER) FORCE
+test-111-forward-update-no-downgrade-RSA4096-SHA3: FORCE
 	$(Q)$(MAKE) test-01-forward-update-no-downgrade SIGN=RSA4096 HASH=SHA3
 
-test-161-forward-update-no-downgrade-TPM-RSA: $(EXPVER) FORCE
+test-161-forward-update-no-downgrade-TPM-RSA: FORCE
 	$(Q)$(MAKE) test-spi-off || true
 	$(Q)$(MAKE) tpm-unmute
 	$(Q)$(MAKE) test-01-forward-update-no-downgrade SIGN=RSA2048 WOLFTPM=1
 	$(Q)$(MAKE) tpm-mute
 
-test-163-rollback-TPM-RSA: $(EXPVER) FORCE
+test-163-rollback-TPM-RSA: FORCE
 	$(Q)$(MAKE) test-spi-off || true
 	$(Q)$(MAKE) tpm-unmute
 	$(Q)$(MAKE) test-03-rollback SIGN=RSA2048 WOLFTPM=1
 	$(Q)$(MAKE) tpm-mute
 
-test-all: clean test-01-forward-update-no-downgrade test-02-forward-update-allow-downgrade test-03-rollback \
-	test-11-forward-update-no-downgrade-ECC test-13-rollback-ECC test-21-forward-update-no-downgrade-SPI test-23-rollback-SPI \
+test-all: clean \
+	test-01-forward-update-no-downgrade \
+	test-02-forward-update-allow-downgrade \
+	test-03-rollback \
+	test-11-forward-update-no-downgrade-ECC \
+	test-13-rollback-ECC \
+	test-21-forward-update-no-downgrade-SPI \
+	test-23-rollback-SPI \
 	test-34-forward-self-update \
 	test-44-forward-self-update-ECC \
 	test-51-forward-update-no-downgrade-RSA \
