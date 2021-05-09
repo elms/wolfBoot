@@ -1,14 +1,15 @@
 OUTPUT_ARCH( "powerpc" )
 
 ENTRY( _reset )
-
-/*
-RESET_ADDR = 0x0FFFFFFFC;
-HARD_RESET = 0x000F0000;
-*/
 RESET_ADDR = 0x00000000effffffc;
-HARD_RESET = 0x00000000effff000;
-START = 0x00000000eff40000;
+
+/* On initial start, only a limited space(4k) is accessible. Code here
+ * bootstraps to enable access to other needed address spaces
+ */
+BOOTSTRAP_TLB = 0x00000000effff000;
+
+START = ##WOLFBOOT_ORIGIN##;
+FLASH_LENGTH = ##WOLFBOOT_PARTITION_BOOT_ADDRESS##;
 
 PHDRS
 {
@@ -18,12 +19,13 @@ PHDRS
 
 MEMORY
 {
-    FLASH (rx) : ORIGIN = START, LENGTH = ##WOLFBOOT_PARTITION_BOOT_ADDRESS##
+    FLASH (rx) : ORIGIN = START, LENGTH = FLASH_LENGTH
     RAM (rwx) : ORIGIN = 0xfdd00000, LENGTH = 0x00002000
 }
 
 SECTIONS
 {
+
     .text :
     {
         *(.text*)
@@ -33,7 +35,7 @@ SECTIONS
 
     . = ALIGN(4);
 
-    .boot HARD_RESET :
+    .boot BOOTSTRAP_TLB :
     {
         KEEP(*(.boot))
     } :text = 0xffff
