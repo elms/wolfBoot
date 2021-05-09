@@ -1,4 +1,5 @@
--include ../.config
+CONFIG_FILE?=../.config
+-include $(CONFIG_FILE)
 -include ../tools/config.mk
 -include ../options.mk
 

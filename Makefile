@@ -4,7 +4,8 @@
 # via environment variables.
 #
 # Configuration values: see tools/config.mk
--include .config
+CONFIG_FILE?=.config
+-include $(CONFIG_FILE)
 include tools/config.mk
 
 ## Initializers
