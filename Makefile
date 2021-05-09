@@ -91,7 +91,7 @@ test-app/image_v1_signed.bin: test-app/image.bin
 
 factory.bin: $(BOOT_IMG) wolfboot.bin $(PRIVATE_KEY) test-app/image_v1_signed.bin $(BINASSEMBLE)
 	@echo "\t[MERGE] $@"
-	$(Q)$(BINASSEMBLE) $@ $(ARCH_FLASH_OFFSET) wolfboot.bin \
+	$(Q)$(BINASSEMBLE) $@ $(WOLFBOOT_START) wolfboot.bin \
                               $(WOLFBOOT_PARTITION_BOOT_ADDRESS) test-app/image_v1_signed.bin
 
 wolfboot.elf: include/target.h $(OBJS) $(LSCRIPT) FORCE
