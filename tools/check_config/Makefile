@@ -2,14 +2,15 @@
 -include ../../.config
 include ../config.mk
 include ../../options.mk
-CFLAGS+=-I. -I../../ -I../../include -m32
+
+CFLAGS+=-I. -I../../ -I../../include
 
 check_config: check_config.o
-	@gcc -o $@ $^ $(CFLAGS)
-	@./check_config
+	$(Q)gcc -o $@ $^ $(CFLAGS)
+	$(Q)./check_config
 
 %.o:%.c
-	@gcc -c -o $@ $^ $(CFLAGS)
+	$(Q)gcc -c -o $@ $^ $(CFLAGS)
 
 clean:
-	@rm -f check_config *.o
+	$(Q)rm -f check_config *.o
