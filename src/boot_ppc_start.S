@@ -87,31 +87,6 @@ setup_interrupts:
 
 /* CRM 11.6 and 6.7 */
 setup_mmu:
-        /* TLBs
-         * for CCSR default
-         * tlb 0, entry 0
-         */
-        xor     3, 3, 3
-        mtspr   MAS0, 3
-        /* V and 1M */
-        lis     3, 0x8000
-        ori     3, 3, (10<<7)
-        mtspr   MAS1, 3
-        /* epn wimg(I|G) */
-        lis     3, 0xfe00
-        ori     3, 3, 0x000a
-        mtspr   MAS2, 3
-        /* rpn permisisons (super W+R) */
-        lis     3, 0xfe00
-        ori     3, 3, 0x0005
-        mtspr   MAS3, 3
-        /* upper rpn */
-        li     3, 0x0000
-        mtspr   MAS7, 3
-        isync
-        msync
-        tlbwe
-        isync
 
         /* TLBs
          * for CCSR default
@@ -119,15 +94,15 @@ setup_mmu:
          */
         lis     3, 0x100d
         mtspr   MAS0, 3
-        /* V, ts, and 16M */
-        lis     3, 0x8000
-        ori     3, 3, (14<<7)|(1<<12)
+        /* V, TS=1, iprotect, and 16M */
+        lis     3, 0xC000
+        ori     3, 3, (1<<12)|(14<<7)
         mtspr   MAS1, 3
         /* epn wimg(I|G) */
         lis     3, 0xfe00
         ori     3, 3, 0x000a
         mtspr   MAS2, 3
-        /* rpn permisisons(user W,R) */
+        /* rpn permisisons(super W,R) */
         lis     3, 0xfe00
         ori     3, 3, 0x0005
         mtspr   MAS3, 3
@@ -141,11 +116,11 @@ setup_mmu:
 
 flash_tlb:
         /* flash code
-         * tlb 1, entry 15
+         * tlb 1, entry 1
          */
-        lis     3, 0x100f
+        lis     3, 0x1001
         mtspr   MAS0, 3
-        /* V, iprotect, TS, and 8M */
+        /* V, TS=1, iprotect, and 8M */
         lis     3, 0xC000
         ori     3, 3, (1<<12)|(13<<7)
         mtspr   MAS1, 3
@@ -153,7 +128,7 @@ flash_tlb:
         lis     3, 0xef80
         ori     3, 3, 0x000a
         mtspr   MAS2, 3
-        /* rpn permisisons */
+        /* rpn permisisons (super X,W,R) */
         lis     3, 0xff80
         ori     3, 3, 0x0015
         mtspr   MAS3, 3
@@ -165,9 +140,34 @@ flash_tlb:
         tlbwe
         isync
 
+        /* flash start
+         * tlb 1, entry 15
+         */
+        lis     3, 0x100f
+        mtspr   MAS0, 3
+        /* V, TS=1, iprotect, and 8M */
+        lis     3, 0xC000
+        ori     3, 3, (1<<12)|(13<<7)
+        mtspr   MAS1, 3
+        /* epn wimg */
+        lis     3, 0xe800
+        ori     3, 3, 0x000a
+        mtspr   MAS2, 3
+        /* rpn permisisons (super X,W,R) */
+        lis     3, 0xe800
+        ori     3, 3, 0x0015
+        mtspr   MAS3, 3
+        /* upper rpn */
+        li     3, 0xf
+        mtspr   MAS7, 3
+        isync
+        msync
+        tlbwe
+        isync
+
 create_ccsr_l2_tlb:
-        /* tlb 0 entry 2 */
-        lis     3,2
+        /* tlb 1, entry 2 */
+        lis     3,0x1002
         ori     3,3,0
         mtspr   MAS0,3
         /* V 4K */
@@ -308,9 +308,9 @@ stack_tlb:
          */
         lis     3, 0x100e
         mtspr   MAS0, 3
-        /* V, iprotect, TS, and 16k */
+        /* V, TS=1, iprotect, and 16k */
         lis     3, 0xC000
-        ori     3, 3, (4<<7)|(1<<12)
+        ori     3, 3, (1<<12)|(4<<7)
         mtspr   MAS1, 3
         /* epn wimg */
         lis     3, 0xfdd0
@@ -353,7 +353,7 @@ set_stack_as:
         mtspr   SPRN_SRR0,7
         mtspr   SPRN_SRR1,6
 
-        /* retrun from interrupt call, switches to AS=1 */
+        /* return from interrupt call and switch to AS=1 (aka TS=1) */
         rfi
 
 switch_as:
