@@ -90,9 +90,9 @@ setup_mmu:
 
         /* TLBs
          * for CCSR default
-         * tlb 1, entry 13
+         * tlb 1, entry 1
          */
-        lis     3, 0x100d
+        lis     3, 0x1001
         mtspr   MAS0, 3
         /* V, TS=1, iprotect, and 16M */
         lis     3, 0xC000
@@ -116,9 +116,9 @@ setup_mmu:
 
 flash_tlb:
         /* flash code
-         * tlb 1, entry 1
+         * tlb 1, entry 2
          */
-        lis     3, 0x1001
+        lis     3, 0x1002
         mtspr   MAS0, 3
         /* V, TS=1, iprotect, and 8M */
         lis     3, 0xC000
@@ -140,34 +140,10 @@ flash_tlb:
         tlbwe
         isync
 
-        /* flash start
-         * tlb 1, entry 15
-         */
-        lis     3, 0x100f
-        mtspr   MAS0, 3
-        /* V, TS=1, iprotect, and 8M */
-        lis     3, 0xC000
-        ori     3, 3, (1<<12)|(13<<7)
-        mtspr   MAS1, 3
-        /* epn wimg */
-        lis     3, 0xe800
-        ori     3, 3, 0x000a
-        mtspr   MAS2, 3
-        /* rpn permisisons (super X,W,R) */
-        lis     3, 0xe800
-        ori     3, 3, 0x0015
-        mtspr   MAS3, 3
-        /* upper rpn */
-        li     3, 0xf
-        mtspr   MAS7, 3
-        isync
-        msync
-        tlbwe
-        isync
 
 create_ccsr_l2_tlb:
-        /* tlb 1, entry 2 */
-        lis     3,0x1002
+        /* tlb 1, entry 4 */
+        lis     3,0x1004
         ori     3,3,0
         mtspr   MAS0,3
         /* V 4K */
@@ -304,9 +280,9 @@ i_enable_loop:
 
 stack_tlb:
         /* stack
-         * tlb 1, entry 14
+         * tlb 1, entry 5
          */
-        lis     3, 0x100e
+        lis     3, 0x1005
         mtspr   MAS0, 3
         /* V, TS=1, iprotect, and 16k */
         lis     3, 0xC000
@@ -344,7 +320,9 @@ set_stack_as:
 #define MSR_IS          (1<<5)  /* Book E Instruction space */
 #define MSR_DS          (1<<4)  /* Book E Data space */
 #define MSR_DE          (1<<9)  /* Debug Exception Enable */
-
+//#define MSR_CE
+//#define MSR_ME
+        
         lis     6, MSR_IS|MSR_DS|MSR_DE@h
         ori     6, 6, MSR_IS|MSR_DS|MSR_DE@l
         lis     7, switch_as@h
@@ -373,6 +351,63 @@ ram_q:
         addi    3,3, 64 /* CONFIG_SYS_CACHELINE_SIZE */
         bdnz    1b
 
+        /* flash start
+         * tlb 1, entry 3
+         */
+        lis     3, 0x1003
+        mtspr   MAS0, 3
+        /* V, iprotect, and 8M */
+        lis     3, 0xC000
+        ori     3, 3, (13<<7)
+        mtspr   MAS1, 3
+        /* epn wimg(*I*G) */
+        lis     3, 0xef80
+        ori     3, 3, 0x000a
+        mtspr   MAS2, 3
+        /* rpn permisisons (super X,W,R) */
+        lis     3, 0xff80
+        ori     3, 3, 0x0015
+        mtspr   MAS3, 3
+        /* upper rpn */
+        li     3, 0
+        mtspr   MAS7, 3
+        isync
+        msync
+        tlbwe
+        isync
+
+        /* stack
+         * tlb 1, entry 6
+         */
+        lis     3, 0x1005
+        mtspr   MAS0, 3
+        /* V, iprotect, and 16k */
+        lis     3, 0xC000
+        ori     3, 3, (4<<7)
+        mtspr   MAS1, 3
+        /* epn wimg */
+        lis     3, 0xfdd0
+        ori     3, 3, 0x0000
+        mtspr   MAS2, 3
+        /* rpn permisisons rpn=0xf_fe03_c000 */
+        lis     3, 0xfe03
+        ori     3, 3, 0xc015
+        mtspr   MAS3, 3
+        /* upper rpn */
+        li     3, 0xf
+        mtspr   MAS7, 3
+        isync
+        msync
+        tlbwe
+        isync
+
+
+        /* switch back to AS/TS=0 */
+        lis	3,(MSR_DE)@h
+	ori	3,3,(MSR_DE)@l
+	mtmsr	3
+	isync
+        
         /* PowerPC e500 Application Binary Interface User’s Guide
          * 2.3.5.1.1 Minimal Stack Frame: No Local Variables or Saved Parameters
          */
