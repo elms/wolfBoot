@@ -385,20 +385,6 @@ ram_q:
         addi    3,3, 64 /* CONFIG_SYS_CACHELINE_SIZE */
         bdnz    1b
 
-        /* switch back to AS/TS=0 */
-        lis	3,(MSR_DE)@h
-	ori	3,3,(MSR_DE)@l
-	mtmsr	3
-	isync
-
-        /* PowerPC e500 Application Binary Interface User’s Guide
-         * 2.3.5.1.1 Minimal Stack Frame: No Local Variables or Saved Parameters
-         */
-        xor     0,0,0
-        stwu    0, -4(1) /* Back chain */
-        stwu    0, -4(1) /* padding 1 */
-        stwu    0, -4(1) /* padding 2 */
-        stwu    0, -4(1) /* LR */
 
         /* TLBs
          * for CCSR TS=0
@@ -440,16 +426,31 @@ ram_q:
         ori     3, 3, 0x000a
         mtspr   MAS2, 3
         /* rpn permisisons (super X,W,R) */
-        lis     3, 0xe800
+        lis     3, 0xf800
         ori     3, 3, 0x0015
         mtspr   MAS3, 3
         /* upper rpn */
-        li     3, 0xf
+        li     3, 0
         mtspr   MAS7, 3
         isync
         msync
         tlbwe
         isync
+
+        /* switch back to AS/TS=0 */
+        lis	3,(MSR_DE)@h
+	ori	3,3,(MSR_DE)@l
+	mtmsr	3
+	isync
+
+        /* PowerPC e500 Application Binary Interface User’s Guide
+         * 2.3.5.1.1 Minimal Stack Frame: No Local Variables or Saved Parameters
+         */
+        xor     0,0,0
+        stwu    0, -4(1) /* Back chain */
+        stwu    0, -4(1) /* padding 1 */
+        stwu    0, -4(1) /* padding 2 */
+        stwu    0, -4(1) /* LR */
 
         /* jump to wolfboot */
         b       boot_entry_C
