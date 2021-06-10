@@ -53,6 +53,14 @@ CRM chapter 11
 * Set up L1 TLB and stack
 
 ## Address space considerations
+Address Space (AS) == Translation Space (TS)
+
+This also corresponds to the MSR register IS and DS values.
+
+TLB 1 is fully associative and allows different size pages.
+TLB 0 is not fully and only allow 4KB page size, but has many more
+
+All TLBs for boot will be in TLB1 and supervisor mode (not user)
 
 ### 7.5.2.1 Address Space (AS) Value
 Address spaces require different TLB entries
@@ -115,32 +123,6 @@ setup_mmu:
         isync
 
 
-        /* TLBs
-         * for CCSR TS=0
-         * tlb 1, entry 2
-         */
-        lis     3, 0x1002
-        mtspr   MAS0, 3
-        /* V, iprotect, and 16M */
-        lis     3, 0xC000
-        ori     3, 3, (14<<7)
-        mtspr   MAS1, 3
-        /* epn wimg(I|G) */
-        lis     3, 0xfe00
-        ori     3, 3, 0x000a
-        mtspr   MAS2, 3
-        /* rpn permisisons(super W,R) */
-        lis     3, 0xfe00
-        ori     3, 3, 0x0005
-        mtspr   MAS3, 3
-        /* upper rpn */
-        li     3, 0x0000
-        mtspr   MAS7, 3
-        isync
-        msync
-        tlbwe
-        isync
-
 flash_tlb:
         /* flash code
          * tlb 1, entry 3
@@ -157,31 +139,6 @@ flash_tlb:
         mtspr   MAS2, 3
         /* rpn permisisons (super X,W,R) */
         lis     3, 0xff80
-        ori     3, 3, 0x0015
-        mtspr   MAS3, 3
-        /* upper rpn */
-        li     3, 0
-        mtspr   MAS7, 3
-        isync
-        msync
-        tlbwe
-        isync
-
-        /* flash start
-         * tlb 1, entry 4
-         */
-        lis     3, 0x1004
-        mtspr   MAS0, 3
-        /* V, iprotect, and 256M */
-        lis     3, 0xC000
-        ori     3, 3, (18<<7)
-        mtspr   MAS1, 3
-        /* epn wimg(*I*G) */
-        lis     3, 0xe800
-        ori     3, 3, 0x000a
-        mtspr   MAS2, 3
-        /* rpn permisisons (super X,W,R) */
-        lis     3, 0xf800
         ori     3, 3, 0x0015
         mtspr   MAS3, 3
         /* upper rpn */
@@ -442,6 +399,57 @@ ram_q:
         stwu    0, -4(1) /* padding 1 */
         stwu    0, -4(1) /* padding 2 */
         stwu    0, -4(1) /* LR */
+
+        /* TLBs
+         * for CCSR TS=0
+         * tlb 1, entry 2
+         */
+        lis     3, 0x1002
+        mtspr   MAS0, 3
+        /* V, iprotect, and 16M */
+        lis     3, 0xC000
+        ori     3, 3, (14<<7)
+        mtspr   MAS1, 3
+        /* epn wimg(I|G) */
+        lis     3, 0xfe00
+        ori     3, 3, 0x000a
+        mtspr   MAS2, 3
+        /* rpn permisisons(super W,R) */
+        lis     3, 0xfe00
+        ori     3, 3, 0x0005
+        mtspr   MAS3, 3
+        /* upper rpn */
+        li     3, 0x0000
+        mtspr   MAS7, 3
+        isync
+        msync
+        tlbwe
+        isync
+
+        /* flash start
+         * tlb 1, entry 4
+         */
+        lis     3, 0x1004
+        mtspr   MAS0, 3
+        /* V, iprotect, and 256M */
+        lis     3, 0xC000
+        ori     3, 3, (18<<7)
+        mtspr   MAS1, 3
+        /* epn wimg(*I*G) */
+        lis     3, 0xe800
+        ori     3, 3, 0x000a
+        mtspr   MAS2, 3
+        /* rpn permisisons (super X,W,R) */
+        lis     3, 0xe800
+        ori     3, 3, 0x0015
+        mtspr   MAS3, 3
+        /* upper rpn */
+        li     3, 0xf
+        mtspr   MAS7, 3
+        isync
+        msync
+        tlbwe
+        isync
 
         /* jump to wolfboot */
         b       boot_entry_C
