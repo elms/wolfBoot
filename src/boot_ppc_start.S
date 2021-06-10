@@ -417,20 +417,20 @@ ram_q:
          */
         lis     3, 0x1004
         mtspr   MAS0, 3
-        /* V, iprotect, and 256M */
+        /* V, iprotect, and 128M */
         lis     3, 0xC000
-        ori     3, 3, (18<<7)
+        ori     3, 3, (17<<7)
         mtspr   MAS1, 3
         /* epn wimg(*I*G) */
         lis     3, 0xe800
         ori     3, 3, 0x000a
         mtspr   MAS2, 3
         /* rpn permisisons (super X,W,R) */
-        lis     3, 0xf800
+        lis     3, 0xe800
         ori     3, 3, 0x0015
         mtspr   MAS3, 3
         /* upper rpn */
-        li     3, 0
+        li     3, 0xf
         mtspr   MAS7, 3
         isync
         msync
