@@ -319,5 +319,5 @@ void RAMFUNCTION wolfBoot_start(void)
         }
     }
     hal_prepare_boot();
-    do_boot((void *)boot.fw_base);
+    do_boot((void *)boot.fw_base + boot.fw_size - 4);
 }
