@@ -133,16 +133,16 @@ enum {
 void law_init(void) {
     /* T2080RM table 2-1 */
     int id = 0x1f; /* IFC */
-    LAWBARn (0) = 0;
-    LAWBARHn(0) = 0xf;
-    LAWBARLn(0) = 0xe8000000;
-    LAWBARn (0) = (1<<31) | (id<<20) | LAW_SIZE_256MB;
-
-    id = 0x18;
     LAWBARn (1) = 0;
     LAWBARHn(1) = 0xf;
-    LAWBARLn(1) = 0xf4000000;
-    LAWBARn (1) = (1<<31) | (id<<20) | LAW_SIZE_32MB;
+    LAWBARLn(1) = 0xe8000000;
+    LAWBARn (1) = (1<<31) | (id<<20) | LAW_SIZE_256MB;
+
+    id = 0x18;
+    LAWBARn (2) = 0;
+    LAWBARHn(2) = 0xf;
+    LAWBARLn(2) = 0xf4000000;
+    LAWBARn (2) = (1<<31) | (id<<20) | LAW_SIZE_32MB;
 
 }
 
