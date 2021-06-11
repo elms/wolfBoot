@@ -123,6 +123,9 @@ setup_mmu:
         isync
 
 
+        /* For TS/AS=1 map all 8M of boot ROM
+         * This window is always enabled T2080 RM (See LAW 2.3.5)
+         */
 flash_tlb:
         /* flash code
          * tlb 1, entry 3
@@ -385,8 +388,10 @@ ram_q:
         addi    3,3, 64 /* CONFIG_SYS_CACHELINE_SIZE */
         bdnz    1b
 
-        b       law_init
-
+        /* Set up LAW to map IFC(flash) to 0xf_e800_0000
+         * This must be inplace along with TLB before switching back to TS=0
+         */
+        bl      law_init
 
         /* TLBs
          * for CCSR TS=0
@@ -432,7 +437,7 @@ ram_q:
         ori     3, 3, 0x0015
         mtspr   MAS3, 3
         /* upper rpn */
-        li     3, 0
+        li     3, 0xf
         mtspr   MAS7, 3
         isync
         msync
