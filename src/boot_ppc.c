@@ -50,6 +50,17 @@ void do_boot(const uint32_t *app_offset, const uint32_t* dts_offset)
 void do_boot(const uint32_t *app_offset)
 #endif
 {
+#ifdef MMU
+  /* Copy DTS to RAM */
+  #ifdef RAM_DTS_ADDR
+  #endif
+
+  /* Copy image to RAM */
+  #ifdef RAM_IMAGE_ADDR
+  #endif
+
+#endif
+
   asm volatile("mtlr %0; blr":: "r"(app_offset));
 }
 

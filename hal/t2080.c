@@ -130,7 +130,7 @@ enum {
     LAW_SIZE_1TB,
 };
 
-static void law_init(void) {
+void law_init(void) {
     /* T2080RM table 2-1 */
     int id = 0x1f; /* IFC */
     LAWBARn (0) = 0;
@@ -147,7 +147,6 @@ static void law_init(void) {
 }
 
 void hal_init(void) {
-    law_init();
 #ifdef DEBUG_UART
     uart_init();
     uart_write("wolfBoot\n", 9);

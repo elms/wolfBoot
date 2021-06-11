@@ -385,6 +385,8 @@ ram_q:
         addi    3,3, 64 /* CONFIG_SYS_CACHELINE_SIZE */
         bdnz    1b
 
+        b       law_init
+
 
         /* TLBs
          * for CCSR TS=0
@@ -412,21 +414,21 @@ ram_q:
         tlbwe
         isync
 
-        /* flash start
-         * tlb 1, entry 4
+        /* flash start overwrite default first page
+         * tlb 1, entry 0
          */
-        lis     3, 0x1004
+        lis     3, 0x1000
         mtspr   MAS0, 3
-        /* V, iprotect, and 128M */
+        /* V, iprotect, and 256M */
         lis     3, 0xC000
-        ori     3, 3, (17<<7)
+        ori     3, 3, (18<<7)
         mtspr   MAS1, 3
         /* epn wimg(*I*G) */
-        lis     3, 0xe800
+        lis     3, 0xe000
         ori     3, 3, 0x000a
         mtspr   MAS2, 3
         /* rpn permisisons (super X,W,R) */
-        lis     3, 0xf800
+        lis     3, 0xe000
         ori     3, 3, 0x0015
         mtspr   MAS3, 3
         /* upper rpn */
