@@ -321,8 +321,8 @@ asm volatile (
 "  b   isr_abort_prefetch\n"        // Abort (Prefetch)
 "  b   isr_abort_data\n"        // Abort (Data)
 "  b   isr_reserved\n"        // Reserved
-"  b   isr_irq\n"  // IRQ
-"  b   isr_fiq\n"  // FIQ
+"  ldr pc,[pc,#-0x1b0]\n"             // IRQ                                                                                           |
+"  ldr pc,[pc,#-0x1b0]\n"             // FIQ
               );
 
 #else
